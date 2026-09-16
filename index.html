@@ -288,7 +288,7 @@
     max-width: 320px;
   }
   .btn {
-    padding: 12px 42px;
+    padding: 12px 38px;
     font-size: 16px;
     font-weight: 900;
     letter-spacing: 1px;
@@ -311,61 +311,80 @@
     color: #ffffff;
     border-color: #fde047;
   }
+  .btn-green {
+    background: linear-gradient(135deg, #059669, #047857);
+    border-color: #34d399;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+  }
   .hidden { display: none !important; }
 
+  /* 排行榜统一展示容器 */
   .rank-box {
     width: 100%;
-    max-width: 340px;
-    background: rgba(15, 23, 42, 0.85);
+    max-width: 350px;
+    background: rgba(15, 23, 42, 0.88);
     border: 1px solid rgba(56, 189, 248, 0.3);
-    border-radius: 12px;
-    padding: 10px 14px;
+    border-radius: 14px;
+    padding: 12px 14px;
     color: #cbd5e1;
     font-size: 11.5px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 10px 25px rgba(0,0,0,0.5);
   }
   .rank-title {
     font-weight: 900;
     color: #facc15;
-    margin-bottom: 6px;
-    font-size: 12.5px;
+    margin-bottom: 8px;
+    font-size: 13px;
     letter-spacing: 1px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(250, 204, 21, 0.25);
+    padding-bottom: 6px;
   }
   .rank-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 5px 0;
+    padding: 6px 0;
     border-bottom: 1px solid rgba(255,255,255,0.06);
   }
   .rank-item:last-child { border-bottom: none; }
-  .rank-item .rank-num { font-weight: 900; color: #38bdf8; width: 24px; text-align: left; }
+  .rank-item .rank-num { font-weight: 900; color: #38bdf8; width: 28px; text-align: left; font-size: 12px; }
   .rank-item.top1 .rank-num { color: #facc15; }
   .rank-item.top2 .rank-num { color: #cbd5e1; }
   .rank-item.top3 .rank-num { color: #d97706; }
   .rank-name {
     font-weight: 800;
     color: #f8fafc;
-    max-width: 95px;
+    max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     text-align: left;
-    font-size: 11.5px;
+    font-size: 12px;
+  }
+  .rank-loc {
+    font-size: 10px;
+    color: #38bdf8;
+    margin-top: 1px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .rank-score {
     font-weight: 900;
     color: #facc15;
     margin-left: auto;
     margin-right: 8px;
+    font-size: 12px;
   }
   .rank-date {
     font-size: 9.5px;
     color: #64748b;
     text-align: right;
-    line-height: 1.2;
+    line-height: 1.25;
   }
 
   .name-input-box {
@@ -375,14 +394,14 @@
     align-items: center;
     width: 100%;
     max-width: 320px;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
   .name-input {
     flex: 1;
-    background: rgba(15, 23, 42, 0.9);
+    background: rgba(15, 23, 42, 0.95);
     border: 1.5px solid #38bdf8;
     border-radius: 999px;
-    padding: 7px 14px;
+    padding: 8px 14px;
     color: #fff;
     font-size: 12px;
     font-weight: 700;
@@ -484,30 +503,48 @@
   <div id="startOverlay" class="overlay">
     <h1>深渊防线：全境死守</h1>
     <p>
-      • <b>双联重装炮台编组</b>：作战单兵全部重构为<b>双联重装自动机炮</b>！拾取军备增设联装炮台，形成密集弹幕防线！<br><br>
-      • <b>循序推进与阶段狂潮</b>：初期（1~19波）平稳可控，<b>第20波起全面爆发排山倒海尸潮</b>，之后每隔 5 波爆发一次！<br><br>
-      • <b>全境功勋榜持续更新</b>：战绩自动记录并依据得分排序，自动感知并登载地理战区位置！
+      • <b>双联重装炮台编组</b>：双联机炮正面火力压制，拾取战备增设联装机炮，构筑密集弹幕防线！<br><br>
+      • <b>阶段百关大决战</b>：每坚守 <b>100 波</b> 触发通关大捷与全屏庆典，可荣誉结算或无限继续挑战！<br><br>
+      • <b>全球统一功勋榜</b>：自动定位并登载 IP 归属地，汇聚全球前 20 传奇战绩！
     </p>
     <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
       <button class="btn" onclick="startGame()">部署重型炮阵</button>
-      <button class="btn btn-sec" onclick="openLeaderboardModal(event)">🏆 查看功勋榜</button>
+      <button class="btn btn-sec" onclick="openLeaderboardModal(event)">🏆 全球功勋榜</button>
     </div>
   </div>
 
-  <!-- 独立排行榜弹窗 -->
+  <!-- 每 100 波通关庆典弹窗 (阶段大捷) -->
+  <div id="milestoneOverlay" class="overlay hidden">
+    <h1 style="background: linear-gradient(180deg, #facc15, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🎉 阶段大捷 · 恭喜通关！ 🎉</h1>
+    <p id="milestoneText" style="color: #fde047; font-weight: 800; font-size: 14px;">已成功抵御 100 波异变狂潮！</p>
+    <p style="font-size: 12px; color: #94a3b8; max-width: 320px;">战绩已即时录入全球排行榜。你可以选择荣誉撤退休整，亦或重整装备迎战更凶残的深渊！</p>
+
+    <!-- 呼号即时输入录入 -->
+    <div class="name-input-box">
+      <input type="text" id="milestoneNameInput" maxlength="8" placeholder="指挥官呼号 (最多8字)" class="name-input">
+      <button class="ctrl-btn" onclick="updateRecordNameFromMilestone()" style="color:#facc15; border-color:#facc15; padding: 7px 14px;">录入功勋</button>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:center; margin-top:6px;">
+      <button class="btn btn-green" onclick="continueChallengeFromMilestone()">⚔️ 继续迎战下一波</button>
+      <button class="btn btn-sec" onclick="quitFromMilestone()" style="padding: 12px 20px;">🏁 荣誉撤退结算</button>
+    </div>
+  </div>
+
+  <!-- 全球统一功勋榜弹窗 (前20名) -->
   <div id="leaderboardOverlay" class="overlay hidden">
-    <h1 style="background: linear-gradient(180deg, #facc15, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🏆 阵地功勋英雄榜</h1>
-    <p style="margin-bottom: 2px;">实时同步全境战区指挥官战果与地理坐标！</p>
+    <h1 style="background: linear-gradient(180deg, #facc15, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🏆 全球功勋英雄榜 (TOP 20)</h1>
+    <p style="margin-bottom: 2px;">汇聚全球各战区指挥官历史最高防守战果！</p>
     
-    <div class="rank-box" style="max-height: 380px; overflow-y: auto;">
+    <div class="rank-box" style="max-height: 400px; overflow-y: auto;">
       <div class="rank-title">
-        <span>全境战役 TOP 10 纪录</span>
-        <span id="currentLocDisplay" style="font-size:10px; color:#38bdf8;">定位中...</span>
+        <span>全球前 20 战绩榜</span>
+        <span id="currentLocDisplay" style="font-size:10.5px; color:#38bdf8;">定位中...</span>
       </div>
       <div id="fullRankList"></div>
     </div>
 
-    <button class="btn" onclick="closeLeaderboardModal(event)">返回主界面</button>
+    <button class="btn" onclick="closeLeaderboardModal(event)">返回界面</button>
   </div>
 
   <div id="pauseOverlay" class="overlay hidden">
@@ -516,6 +553,7 @@
     <button class="btn" onclick="togglePause(event)">继续战斗</button>
   </div>
 
+  <!-- 阵地沦陷失败结算界面 -->
   <div id="gameOverOverlay" class="overlay hidden">
     <h1 style="background: linear-gradient(180deg, #f87171, #dc2626); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">阵地沦陷</h1>
     <p id="finalStats" style="margin-bottom: 2px;">重型炮台防线被变异人潮彻底冲垮！</p>
@@ -523,12 +561,12 @@
     <!-- 呼号输入与保存 -->
     <div class="name-input-box">
       <input type="text" id="playerNameInput" maxlength="8" placeholder="指挥官呼号 (最多8字)" class="name-input">
-      <button class="ctrl-btn" onclick="updateRecordName()" style="color:#facc15; border-color:#facc15; padding: 7px 14px;">保存呼号</button>
+      <button class="ctrl-btn" onclick="updateRecordNameFromGameOver()" style="color:#facc15; border-color:#facc15; padding: 7px 14px;">保存呼号</button>
     </div>
 
     <div class="rank-box">
       <div class="rank-title">
-        <span>🏆 功勋排行榜 (TOP 5)</span>
+        <span>🏆 全球功勋榜 (TOP 5)</span>
         <span style="font-size:10px; color:#94a3b8;">自动收录</span>
       </div>
       <div id="rankList"></div>
@@ -536,7 +574,7 @@
 
     <div style="display:flex; gap:10px; justify-content:center;">
       <button class="btn" onclick="startGame()">重组炮阵再战</button>
-      <button class="btn btn-sec" onclick="openLeaderboardModal(event)" style="padding: 12px 20px;">查看完整榜</button>
+      <button class="btn btn-sec" onclick="openLeaderboardModal(event)" style="padding: 12px 20px;">查看前20</button>
     </div>
   </div>
 </div>
@@ -584,6 +622,10 @@ const pauseOverlay = document.getElementById('pauseOverlay');
 const sfxBtn = document.getElementById('sfxBtn');
 
 const startOverlay = document.getElementById('startOverlay');
+const milestoneOverlay = document.getElementById('milestoneOverlay');
+const milestoneText = document.getElementById('milestoneText');
+const milestoneNameInput = document.getElementById('milestoneNameInput');
+
 const leaderboardOverlay = document.getElementById('leaderboardOverlay');
 const gameOverOverlay = document.getElementById('gameOverOverlay');
 const playerNameInput = document.getElementById('playerNameInput');
@@ -831,6 +873,22 @@ function playSound(type, extra = {}) {
     osc.start(cur);
     osc.stop(cur + 0.25);
   }
+  else if (type === 'fanfare') {
+    // 100 关胜利号角庆典音效
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((freq, idx) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(freq, cur + idx * 0.12);
+      g.gain.setValueAtTime(0.3, cur + idx * 0.12);
+      g.gain.exponentialRampToValueAtTime(0.001, cur + idx * 0.12 + 0.45);
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.start(cur + idx * 0.12);
+      o.stop(cur + idx * 0.12 + 0.45);
+    });
+  }
   else if (type === 'fail') {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -862,6 +920,10 @@ let prevWave = 1;
 let gameTime = 0;
 let lastShotTime = 0;
 let envAnim = 0;
+
+// 100关里程碑与通关庆典控制
+let lastMilestoneWaveChecked = 0;
+let celebratoryConfetti = [];
 
 let fireInterval = 160;
 let bulletStreamCount = 1;
@@ -1288,22 +1350,22 @@ function callTrap(e) {
 }
 
 // ==========================================
-// 实时持久化功勋排行榜与全域地理感知定位
+// 全球统一 TOP 20 排行榜与全域 IP 归属地自动感知
 // ==========================================
-const STORAGE_KEY = 'deep_defense_ranks';
+const STORAGE_KEY = 'deep_defense_ranks_global_v2';
 const LAST_NAME_KEY = 'deep_defense_last_name';
 const USER_LOC_KEY = 'deep_defense_user_loc';
 let currentRunRecordId = null;
 let detectedLocation = localStorage.getItem(USER_LOC_KEY) || '';
 
-// 自动感知 IP 地理位置 (HTTPS & CORS 纯前端兼容)
+// 自动感知 IP 地理位置 (优先提取 国家·省份/州)
 async function fetchIpLocation() {
   if (detectedLocation) {
-    if (currentLocDisplay) currentLocDisplay.innerText = `战区: ${detectedLocation}`;
+    if (currentLocDisplay) currentLocDisplay.innerText = `📍 本地战区: ${detectedLocation}`;
     return;
   }
   
-  // 第一通道：ipwho.is 极速中文化接口
+  // 第一通道：ipwho.is 极速中文化地理接口
   try {
     const res = await fetch('https://ipwho.is/?lang=zh-CN');
     if (res.ok) {
@@ -1317,14 +1379,14 @@ async function fetchIpLocation() {
         if (loc) {
           detectedLocation = loc;
           localStorage.setItem(USER_LOC_KEY, detectedLocation);
-          if (currentLocDisplay) currentLocDisplay.innerText = `战区: ${detectedLocation}`;
+          if (currentLocDisplay) currentLocDisplay.innerText = `📍 本地战区: ${detectedLocation}`;
           return;
         }
       }
     }
   } catch(e) {}
 
-  // 第二通道备用：ipapi.co
+  // 第二备用通道：ipapi.co
   try {
     const res = await fetch('https://ipapi.co/json/');
     if (res.ok) {
@@ -1336,14 +1398,14 @@ async function fetchIpLocation() {
       if (loc) {
         detectedLocation = loc;
         localStorage.setItem(USER_LOC_KEY, detectedLocation);
-        if (currentLocDisplay) currentLocDisplay.innerText = `战区: ${detectedLocation}`;
+        if (currentLocDisplay) currentLocDisplay.innerText = `📍 本地战区: ${detectedLocation}`;
         return;
       }
     }
   } catch(e) {}
 
-  detectedLocation = '战区总部';
-  if (currentLocDisplay) currentLocDisplay.innerText = `战区: ${detectedLocation}`;
+  detectedLocation = '深渊前线';
+  if (currentLocDisplay) currentLocDisplay.innerText = `📍 本地战区: ${detectedLocation}`;
 }
 
 function getStoredLeaderboard() {
@@ -1360,14 +1422,14 @@ function saveLeaderboardData(list) {
   } catch(e) {}
 }
 
-function renderLeaderboardHTML(containerId, maxItems = 10, currentId = null) {
+function renderLeaderboardHTML(containerId, maxItems = 20, currentId = null) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const list = getStoredLeaderboard().slice(0, maxItems);
   container.innerHTML = '';
   
   if (list.length === 0) {
-    container.innerHTML = '<div style="padding: 16px 0; color:#64748b; text-align:center;">暂无战役记录，部署防线开始作战！</div>';
+    container.innerHTML = '<div style="padding: 24px 0; color:#64748b; text-align:center;">暂无全球战绩记录，部署炮台率先登顶！</div>';
     return;
   }
 
@@ -1376,12 +1438,13 @@ function renderLeaderboardHTML(containerId, maxItems = 10, currentId = null) {
     const row = document.createElement('div');
     row.className = `rank-item ${idx === 0 ? 'top1' : (idx === 1 ? 'top2' : (idx === 2 ? 'top3' : ''))}`;
     if (isCurrent) {
-      row.style.background = 'rgba(56, 189, 248, 0.15)';
-      row.style.borderRadius = '6px';
+      row.style.background = 'rgba(56, 189, 248, 0.16)';
+      row.style.borderRadius = '8px';
+      row.style.padding = '6px 4px';
     }
 
     const rankDisplay = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `#${idx + 1}`));
-    const locTag = item.location ? `<span style="font-size:9.5px; color:#38bdf8; opacity:0.9; margin-top:2px;">📍 ${item.location}</span>` : '';
+    const locTag = item.location ? `<div class="rank-loc">📍 ${item.location}</div>` : '';
 
     row.innerHTML = `
       <span class="rank-num">${rankDisplay}</span>
@@ -1391,8 +1454,8 @@ function renderLeaderboardHTML(containerId, maxItems = 10, currentId = null) {
       </div>
       <span class="rank-score">${(item.score || 0).toLocaleString()}</span>
       <div class="rank-date">
-        <span>第${item.wave || 1}潮</span><br>
-        <span style="color:#64748b;">${item.date || ''}</span>
+        <span style="color:#38bdf8; font-weight:800;">第${item.wave || 1}潮</span><br>
+        <span>${item.date || ''}</span>
       </div>
     `;
     container.appendChild(row);
@@ -1403,48 +1466,76 @@ function recordGameResult(finalScore, finalWave) {
   if (finalScore <= 0) return;
   let list = getStoredLeaderboard();
   const lastName = localStorage.getItem(LAST_NAME_KEY) || '指挥官';
-  currentRunRecordId = Date.now().toString() + Math.random().toString(36).substr(2, 4);
+  
+  // 若当前局已经生成了记录，直接更新该记录（例如在100关保存过），避免重复插入
+  if (currentRunRecordId) {
+    const existing = list.find(it => it.id === currentRunRecordId);
+    if (existing) {
+      existing.score = Math.max(existing.score, finalScore);
+      existing.wave = Math.max(existing.wave, finalWave);
+      existing.date = new Date().toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+      list.sort((a, b) => b.score - a.score);
+      list = list.slice(0, 20); // 严格保留全球前 20
+      saveLeaderboardData(list);
+      renderLeaderboardHTML('rankList', 5, currentRunRecordId);
+      return;
+    }
+  }
 
+  currentRunRecordId = Date.now().toString() + Math.random().toString(36).substr(2, 4);
   list.push({
     id: currentRunRecordId,
     name: lastName,
-    location: detectedLocation || '战区总部',
+    location: detectedLocation || '深渊前线',
     score: finalScore,
     wave: finalWave,
     date: new Date().toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
   });
 
   list.sort((a, b) => b.score - a.score);
-  list = list.slice(0, 50); // 保存历史前 50 局
+  list = list.slice(0, 20); // 严格保留全球前 20
   saveLeaderboardData(list);
 
   renderLeaderboardHTML('rankList', 5, currentRunRecordId);
 }
 
-function updateRecordName() {
-  let newName = playerNameInput.value.trim();
+function updateRecordName(newName) {
+  newName = newName ? newName.trim() : '';
   if (!newName) newName = '指挥官';
   localStorage.setItem(LAST_NAME_KEY, newName);
 
+  let list = getStoredLeaderboard();
   if (currentRunRecordId) {
-    let list = getStoredLeaderboard();
     const item = list.find(it => it.id === currentRunRecordId);
     if (item) {
       item.name = newName;
-      if (!item.location || item.location === '战区总部') {
-        item.location = detectedLocation || '战区总部';
+      if (!item.location || item.location === '深渊前线') {
+        item.location = detectedLocation || '深渊前线';
       }
+      list.sort((a, b) => b.score - a.score);
       saveLeaderboardData(list);
-      renderLeaderboardHTML('rankList', 5, currentRunRecordId);
-      spawnPopup("🎖️ 呼号与战区已同步保存！", W / 2, H * 0.45, '#facc15', 1.2);
     }
+  } else {
+    // 首次在弹窗中直接提交
+    recordGameResult(score, wave);
   }
+  renderLeaderboardHTML('rankList', 5, currentRunRecordId);
+  renderLeaderboardHTML('fullRankList', 20, currentRunRecordId);
+  spawnPopup("🎖️ 功勋已同步至全球排行榜！", W / 2, H * 0.45, '#facc15', 1.25);
+}
+
+function updateRecordNameFromGameOver() {
+  updateRecordName(playerNameInput.value);
+}
+
+function updateRecordNameFromMilestone() {
+  updateRecordName(milestoneNameInput.value);
 }
 
 function openLeaderboardModal(e) {
   if (e) e.stopPropagation();
-  renderLeaderboardHTML('fullRankList', 10, currentRunRecordId);
-  if (currentLocDisplay) currentLocDisplay.innerText = `战区: ${detectedLocation || '定位中...'}`;
+  renderLeaderboardHTML('fullRankList', 20, currentRunRecordId);
+  if (currentLocDisplay) currentLocDisplay.innerText = `📍 本地战区: ${detectedLocation || '定位中...'}`;
   leaderboardOverlay.classList.remove('hidden');
 }
 
@@ -1453,9 +1544,72 @@ function closeLeaderboardModal(e) {
   leaderboardOverlay.classList.add('hidden');
 }
 
+// ==========================================
+// 100关里程碑与通关庆典控制逻辑
+// ==========================================
+function triggerMilestoneOverlay(reachedWave) {
+  isPaused = true;
+  playSound('fanfare');
+  spawnCelebratoryConfetti(80);
+
+  milestoneText.innerText = `恭喜通关第 ${reachedWave} 波异变深渊！`;
+  const savedName = localStorage.getItem(LAST_NAME_KEY) || '指挥官';
+  milestoneNameInput.value = savedName;
+
+  // 立即保存当前战绩
+  recordGameResult(score, reachedWave);
+
+  milestoneOverlay.classList.remove('hidden');
+}
+
+function spawnCelebratoryConfetti(count = 60) {
+  const colors = ['#facc15', '#38bdf8', '#ef4444', '#4ade80', '#c084fc', '#fb923c', '#ffffff'];
+  for (let i = 0; i < count; i++) {
+    celebratoryConfetti.push({
+      x: Math.random() * W,
+      y: -20 - Math.random() * 80,
+      vx: (Math.random() - 0.5) * 4.5,
+      vy: 2.0 + Math.random() * 4.5,
+      w: 8 + Math.random() * 6,
+      h: 5 + Math.random() * 5,
+      rot: Math.random() * Math.PI * 2,
+      vRot: (Math.random() - 0.5) * 0.25,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1.0
+    });
+  }
+}
+
+function continueChallengeFromMilestone() {
+  milestoneOverlay.classList.add('hidden');
+  celebratoryConfetti = [];
+  isPaused = false;
+
+  // 赠送通关额外奖励：狂暴超频 10s + 100K 战术军资
+  frenzyTimer = 10.0;
+  addScore(100000);
+  playSound('frenzy');
+  spawnPopup("⚡ 荣誉嘉奖！10秒双倍狂暴 + 10万分！", W / 2, H * 0.45, '#facc15', 1.4);
+
+  lastFrameTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+function quitFromMilestone() {
+  milestoneOverlay.classList.add('hidden');
+  celebratoryConfetti = [];
+  isPlaying = false;
+  isPaused = false;
+  document.getElementById('finalStats').innerText = `荣誉通关第 ${wave} 波 | 终局得分: ${score.toLocaleString()}`;
+  playerNameInput.value = localStorage.getItem(LAST_NAME_KEY) || '指挥官';
+  recordGameResult(score, wave);
+  gameOverOverlay.classList.remove('hidden');
+}
+
 function startGame() {
   startOverlay.classList.add('hidden');
   gameOverOverlay.classList.add('hidden');
+  milestoneOverlay.classList.add('hidden');
   leaderboardOverlay.classList.add('hidden');
   pauseOverlay.classList.add('hidden');
   dangerBorderLeft.classList.remove('active');
@@ -1470,12 +1624,14 @@ function startGame() {
   score = 0;
   wave = 1;
   prevWave = 1;
+  lastMilestoneWaveChecked = 0;
   gameTime = 0;
   fireInterval = 160;
   bulletStreamCount = 1;
   bulletDamage = 1;
   totalUpgradesGained = 0;
   currentRunRecordId = null;
+  celebratoryConfetti = [];
 
   comboKills = 0;
   comboTimer = 0;
@@ -1552,13 +1708,13 @@ function startGame() {
 function gameOver() {
   isPlaying = false;
   isPaused = false;
+  celebratoryConfetti = [];
   playSound('fail');
   dangerBorderLeft.classList.remove('active');
   dangerBorderRight.classList.remove('active');
   frostBorder.classList.remove('active');
   document.getElementById('finalStats').innerText = `抵御潮次: ${wave} | 终局得分: ${score.toLocaleString()}`;
 
-  // 载入并填入上次使用的呼号
   const savedName = localStorage.getItem(LAST_NAME_KEY) || '指挥官';
   playerNameInput.value = savedName;
 
@@ -2110,10 +2266,19 @@ function update(dt) {
     }
   }
 
-  // 波次更新与【20波起每5波爆发一次尸潮】
+  // 波次更新与【20波起每5波爆发一次尸潮】+【每100波通关庆典】
   const currentWave = 1 + Math.floor(hordeCounter / 4);
   if (currentWave !== wave) {
     wave = currentWave;
+
+    // 检查 100 波整倍数大捷通关机制 (100, 200, 300...)
+    if (wave >= 100 && wave % 100 === 0 && lastMilestoneWaveChecked !== wave) {
+      lastMilestoneWaveChecked = wave;
+      triggerMilestoneOverlay(wave);
+      return;
+    }
+
+    // 20波起每5波大爆发 (20, 25, 30...)
     if (wave >= 20 && wave % 5 === 0 && wave !== prevWave) {
       prevWave = wave;
       playSound('boss_roar');
@@ -2537,6 +2702,18 @@ function update(dt) {
     if (p.alpha <= 0) particles.splice(i, 1);
   }
 
+  // 100关里程碑庆典彩带礼花粒子更新
+  for (let i = celebratoryConfetti.length - 1; i >= 0; i--) {
+    const cf = celebratoryConfetti[i];
+    cf.x += cf.vx;
+    cf.y += cf.vy;
+    cf.rot += cf.vRot;
+    if (cf.y > H + 20) {
+      cf.y = -10;
+      cf.x = Math.random() * W;
+    }
+  }
+
   for (let i = popups.length - 1; i >= 0; i--) {
     const pop = popups[i];
     pop.y += pop.vy;
@@ -2918,6 +3095,7 @@ function renderPodBox(pod) {
   ctx.save();
   ctx.translate(prj.x, prj.y);
 
+  // 地面全息投影基座
   ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
   ctx.beginPath();
   ctx.ellipse(0, 10 * scale, 52 * scale, 20 * scale, 0, 0, Math.PI * 2);
@@ -3365,7 +3543,7 @@ function draw() {
     }
   }
 
-  for (let i = 0; i < row1Count; i++) {
+  for (let i = row1Count - 1; i >= 0; i--) {
     const sX = startX1 + i * tightSpread;
     const pUnit = project(sX, 0.04);
     drawDefenseTurret(pUnit.x, pUnit.y, i === Math.floor(row1Count / 2));
@@ -3434,7 +3612,18 @@ function draw() {
     ctx.restore();
   }
 
-  // 16. 环境微粒
+  // 16. 庆祝彩带礼花渲染 (通关大捷)
+  for (let cf of celebratoryConfetti) {
+    ctx.save();
+    ctx.translate(cf.x, cf.y);
+    ctx.rotate(cf.rot);
+    ctx.fillStyle = cf.color;
+    ctx.globalAlpha = cf.alpha;
+    ctx.fillRect(-cf.w / 2, -cf.h / 2, cf.w, cf.h);
+    ctx.restore();
+  }
+
+  // 17. 环境微粒
   const bIdx = Math.floor((wave - 1) / 5) % 4;
   ctx.save();
   for (let ap of ambientParticles) {
@@ -3465,7 +3654,7 @@ function draw() {
   }
   ctx.restore();
 
-  // 17. 击杀跳字
+  // 18. 击杀跳字
   for (let pop of popups) {
     ctx.save();
     ctx.fillStyle = pop.color;
@@ -3476,7 +3665,7 @@ function draw() {
     ctx.restore();
   }
 
-  // 18. 屏幕白闪
+  // 19. 屏幕白闪
   if (screenFlashAlpha > 0) {
     ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1.0, screenFlashAlpha)})`;
     ctx.fillRect(0, 0, W, H);
@@ -3487,7 +3676,26 @@ function draw() {
 
 let lastFrameTime = performance.now();
 function gameLoop(time) {
-  if (!isPlaying || isPaused) return;
+  if (!isPlaying) return;
+
+  if (isPaused) {
+    // 暂停或弹窗期间仅渲染可能存在的彩带礼花，暂停敌机与主逻辑推进
+    if (celebratoryConfetti.length > 0) {
+      for (let cf of celebratoryConfetti) {
+        cf.x += cf.vx * 0.5;
+        cf.y += cf.vy * 0.5;
+        cf.rot += cf.vRot * 0.5;
+        if (cf.y > H + 20) {
+          cf.y = -10;
+          cf.x = Math.random() * W;
+        }
+      }
+      draw();
+    }
+    requestAnimationFrame(gameLoop);
+    return;
+  }
+
   const dt = Math.min((time - lastFrameTime) / 1000, 0.08);
   lastFrameTime = time;
 
@@ -3500,12 +3708,18 @@ function gameLoop(time) {
 // 页面加载完成后启动异步地理感知与上次呼号初始化
 window.addEventListener('DOMContentLoaded', () => {
   const savedName = localStorage.getItem(LAST_NAME_KEY);
-  if (savedName && playerNameInput) {
-    playerNameInput.value = savedName;
+  if (savedName) {
+    if (playerNameInput) playerNameInput.value = savedName;
+    if (milestoneNameInput) milestoneNameInput.value = savedName;
   }
   if (playerNameInput) {
     playerNameInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') updateRecordName();
+      if (e.key === 'Enter') updateRecordNameFromGameOver();
+    });
+  }
+  if (milestoneNameInput) {
+    milestoneNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') updateRecordNameFromMilestone();
     });
   }
   fetchIpLocation();
