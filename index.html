@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>深渊防线：全境死守 - 炮阵狂潮版</title>
+<!-- 引入 Supabase 官方浏览器 SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body {
@@ -318,10 +320,10 @@
   }
   .hidden { display: none !important; }
 
-  /* 排行榜统一展示容器 */
+  /* 全球排行榜统一展示容器 */
   .rank-box {
     width: 100%;
-    max-width: 350px;
+    max-width: 360px;
     background: rgba(15, 23, 42, 0.88);
     border: 1px solid rgba(56, 189, 248, 0.3);
     border-radius: 14px;
@@ -357,7 +359,7 @@
   .rank-name {
     font-weight: 800;
     color: #f8fafc;
-    max-width: 100px;
+    max-width: 110px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -368,7 +370,7 @@
     font-size: 10px;
     color: #38bdf8;
     margin-top: 1px;
-    max-width: 120px;
+    max-width: 130px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -505,7 +507,7 @@
     <p>
       • <b>双联重装炮台编组</b>：双联机炮正面火力压制，拾取战备增设联装机炮，构筑密集弹幕防线！<br><br>
       • <b>阶段百关大决战</b>：每坚守 <b>100 波</b> 触发通关大捷与全屏庆典，可荣誉结算或无限继续挑战！<br><br>
-      • <b>全球统一功勋榜</b>：自动定位并登载 IP 归属地，汇聚全球前 20 传奇战绩！
+      • <b>全球统一功勋榜</b>：直连 Supabase 云端数据库，自动感知 IP 归属地，汇聚全球前 20 传奇战绩！
     </p>
     <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
       <button class="btn" onclick="startGame()">部署重型炮阵</button>
@@ -567,7 +569,7 @@
     <div class="rank-box">
       <div class="rank-title">
         <span>🏆 全球功勋榜 (TOP 5)</span>
-        <span style="font-size:10px; color:#94a3b8;">自动收录</span>
+        <span style="font-size:10px; color:#94a3b8;">实时云同步</span>
       </div>
       <div id="rankList"></div>
     </div>
@@ -580,6 +582,30 @@
 </div>
 
 <script>
+// ==========================================
+// 1. Supabase 公共云端数据库接入配置
+// ==========================================
+// 请将以下两项替换为您在 Supabase 项目控制台获取的 Project URL 与 anon public 密钥
+const SUPABASE_URL = 'https://xaoplyzomxslhqlzpqgi.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_e9RqYNFsEe8eyoViiuP7VQ_ZzHCCtog';
+
+let supabaseClient = null;
+function initSupabase() {
+  if (window.supabase && SUPABASE_URL && !SUPABASE_URL.includes('YOUR_PROJECT_ID')) {
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      console.log('✅ Supabase 全球排行榜云数据库连接就绪');
+    } catch(err) {
+      console.warn('⚠️ Supabase 初始化异常，已启用离线备用机制:', err);
+    }
+  }
+}
+initSupabase();
+
+function isSupabaseReady() {
+  return supabaseClient !== null && !SUPABASE_URL.includes('YOUR_PROJECT_ID');
+}
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const dangerBorderLeft = document.getElementById('dangerBorderLeft');
@@ -874,7 +900,6 @@ function playSound(type, extra = {}) {
     osc.stop(cur + 0.25);
   }
   else if (type === 'fanfare') {
-    // 100 关胜利号角庆典音效
     const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((freq, idx) => {
       const o = audioCtx.createOscillator();
@@ -921,7 +946,6 @@ let gameTime = 0;
 let lastShotTime = 0;
 let envAnim = 0;
 
-// 100关里程碑与通关庆典控制
 let lastMilestoneWaveChecked = 0;
 let celebratoryConfetti = [];
 
@@ -1350,7 +1374,7 @@ function callTrap(e) {
 }
 
 // ==========================================
-// 全球统一 TOP 20 排行榜与全域 IP 归属地自动感知
+// 全球统一 TOP 20 排行榜 (Supabase 云端 + 本地持久化缓存)
 // ==========================================
 const STORAGE_KEY = 'deep_defense_ranks_global_v2';
 const LAST_NAME_KEY = 'deep_defense_last_name';
@@ -1358,10 +1382,10 @@ const USER_LOC_KEY = 'deep_defense_user_loc';
 let currentRunRecordId = null;
 let detectedLocation = localStorage.getItem(USER_LOC_KEY) || '';
 
-// 自动感知 IP 地理位置 (优先提取 国家·省份/州)
+// 自动感知 IP 地理位置
 async function fetchIpLocation() {
-  if (detectedLocation) {
-    if (currentLocDisplay) currentLocDisplay.innerText = `📍 本地战区: ${detectedLocation}`;
+  if (detectedLocation && detectedLocation !== '深渊前线') {
+    if (currentLocDisplay) currentLocDisplay.innerText = `📍 归属地: ${detectedLocation}`;
     return;
   }
   
@@ -1379,7 +1403,7 @@ async function fetchIpLocation() {
         if (loc) {
           detectedLocation = loc;
           localStorage.setItem(USER_LOC_KEY, detectedLocation);
-          if (currentLocDisplay) currentLocDisplay.innerText = `📍 本地战区: ${detectedLocation}`;
+          if (currentLocDisplay) currentLocDisplay.innerText = `📍 归属地: ${detectedLocation}`;
           return;
         }
       }
@@ -1398,17 +1422,39 @@ async function fetchIpLocation() {
       if (loc) {
         detectedLocation = loc;
         localStorage.setItem(USER_LOC_KEY, detectedLocation);
-        if (currentLocDisplay) currentLocDisplay.innerText = `📍 本地战区: ${detectedLocation}`;
+        if (currentLocDisplay) currentLocDisplay.innerText = `📍 归属地: ${detectedLocation}`;
         return;
       }
     }
   } catch(e) {}
 
   detectedLocation = '深渊前线';
-  if (currentLocDisplay) currentLocDisplay.innerText = `📍 本地战区: ${detectedLocation}`;
+  if (currentLocDisplay) currentLocDisplay.innerText = `📍 归属地: ${detectedLocation}`;
 }
 
-function getStoredLeaderboard() {
+// 统一异步读取全球排行榜：优先从 Supabase 云端拉取，失败时无缝切换本地缓存
+async function getStoredLeaderboard() {
+  if (isSupabaseReady()) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('leaderboard')
+        .select('*')
+        .order('score', { ascending: false })
+        .limit(20);
+
+      if (!error && Array.isArray(data)) {
+        // 同步保存本地离线缓存
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+        return data;
+      } else if (error) {
+        console.warn('⚠️ Supabase 读取失败，切换本地缓存:', error.message);
+      }
+    } catch(e) {
+      console.warn('⚠️ 网络连接异常，正在使用本地排行榜缓存:', e);
+    }
+  }
+
+  // 离线备用读取
   let list = [];
   try {
     list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -1416,20 +1462,22 @@ function getStoredLeaderboard() {
   return Array.isArray(list) ? list : [];
 }
 
-function saveLeaderboardData(list) {
+function saveLocalLeaderboard(list) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   } catch(e) {}
 }
 
-function renderLeaderboardHTML(containerId, maxItems = 20, currentId = null) {
+async function renderLeaderboardHTML(containerId, maxItems = 20, currentId = null) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  const list = getStoredLeaderboard().slice(0, maxItems);
+  
+  container.innerHTML = '<div style="padding: 16px 0; color:#38bdf8; text-align:center;">正在同步全球功勋战绩...</div>';
+  const list = (await getStoredLeaderboard()).slice(0, maxItems);
   container.innerHTML = '';
   
   if (list.length === 0) {
-    container.innerHTML = '<div style="padding: 24px 0; color:#64748b; text-align:center;">暂无全球战绩记录，部署炮台率先登顶！</div>';
+    container.innerHTML = '<div style="padding: 24px 0; color:#64748b; text-align:center;">暂无全球战绩记录，部署炮阵率先登顶！</div>';
     return;
   }
 
@@ -1438,7 +1486,7 @@ function renderLeaderboardHTML(containerId, maxItems = 20, currentId = null) {
     const row = document.createElement('div');
     row.className = `rank-item ${idx === 0 ? 'top1' : (idx === 1 ? 'top2' : (idx === 2 ? 'top3' : ''))}`;
     if (isCurrent) {
-      row.style.background = 'rgba(56, 189, 248, 0.16)';
+      row.style.background = 'rgba(56, 189, 248, 0.18)';
       row.style.borderRadius = '8px';
       row.style.padding = '6px 4px';
     }
@@ -1462,81 +1510,112 @@ function renderLeaderboardHTML(containerId, maxItems = 20, currentId = null) {
   });
 }
 
-function recordGameResult(finalScore, finalWave) {
+// 统一提交战绩至 Supabase 云端，兼顾断网离线缓存
+async function recordGameResult(finalScore, finalWave) {
   if (finalScore <= 0) return;
-  let list = getStoredLeaderboard();
   const lastName = localStorage.getItem(LAST_NAME_KEY) || '指挥官';
+  const today = new Date().toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+  const loc = detectedLocation || '深渊前线';
+
+  if (!currentRunRecordId) {
+    currentRunRecordId = Date.now().toString() + Math.random().toString(36).substr(2, 6);
+  }
+
+  const recordPayload = {
+    id: currentRunRecordId,
+    name: lastName,
+    location: loc,
+    score: finalScore,
+    wave: finalWave,
+    date: today
+  };
+
+  // 1. 本地立即更新保障离线可读
+  let localList = [];
+  try {
+    localList = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch(e) { localList = []; }
   
-  // 若当前局已经生成了记录，直接更新该记录（例如在100关保存过），避免重复插入
-  if (currentRunRecordId) {
-    const existing = list.find(it => it.id === currentRunRecordId);
-    if (existing) {
-      existing.score = Math.max(existing.score, finalScore);
-      existing.wave = Math.max(existing.wave, finalWave);
-      existing.date = new Date().toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
-      list.sort((a, b) => b.score - a.score);
-      list = list.slice(0, 20); // 严格保留全球前 20
-      saveLeaderboardData(list);
-      renderLeaderboardHTML('rankList', 5, currentRunRecordId);
-      return;
+  const existingIdx = localList.findIndex(it => it.id === currentRunRecordId);
+  if (existingIdx !== -1) {
+    localList[existingIdx].score = Math.max(localList[existingIdx].score, finalScore);
+    localList[existingIdx].wave = Math.max(localList[existingIdx].wave, finalWave);
+    localList[existingIdx].date = today;
+  } else {
+    localList.push(recordPayload);
+  }
+  localList.sort((a, b) => b.score - a.score);
+  saveLocalLeaderboard(localList.slice(0, 20));
+
+  // 2. 向 Supabase 发起持久化 Upsert (存在则覆盖更新，不存在则插入)
+  if (isSupabaseReady()) {
+    try {
+      const { error } = await supabaseClient
+        .from('leaderboard')
+        .upsert(recordPayload);
+      if (error) {
+        console.warn('⚠️ 云端同步写入失败:', error.message);
+      }
+    } catch(err) {
+      console.warn('⚠️ 云端网络请求异常:', err);
     }
   }
 
-  currentRunRecordId = Date.now().toString() + Math.random().toString(36).substr(2, 4);
-  list.push({
-    id: currentRunRecordId,
-    name: lastName,
-    location: detectedLocation || '深渊前线',
-    score: finalScore,
-    wave: finalWave,
-    date: new Date().toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
-  });
-
-  list.sort((a, b) => b.score - a.score);
-  list = list.slice(0, 20); // 严格保留全球前 20
-  saveLeaderboardData(list);
-
-  renderLeaderboardHTML('rankList', 5, currentRunRecordId);
+  // 3. 重新渲染
+  await renderLeaderboardHTML('rankList', 5, currentRunRecordId);
 }
 
-function updateRecordName(newName) {
+// 统一修改指挥官呼号
+async function updateRecordName(newName) {
   newName = newName ? newName.trim() : '';
   if (!newName) newName = '指挥官';
   localStorage.setItem(LAST_NAME_KEY, newName);
 
-  let list = getStoredLeaderboard();
+  const loc = detectedLocation || '深渊前线';
+
+  // 本地缓存同步更新
+  let localList = [];
+  try { localList = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) {}
   if (currentRunRecordId) {
-    const item = list.find(it => it.id === currentRunRecordId);
+    const item = localList.find(it => it.id === currentRunRecordId);
     if (item) {
       item.name = newName;
-      if (!item.location || item.location === '深渊前线') {
-        item.location = detectedLocation || '深渊前线';
-      }
-      list.sort((a, b) => b.score - a.score);
-      saveLeaderboardData(list);
+      if (!item.location || item.location === '深渊前线') item.location = loc;
+      saveLocalLeaderboard(localList);
     }
-  } else {
-    // 首次在弹窗中直接提交
-    recordGameResult(score, wave);
   }
-  renderLeaderboardHTML('rankList', 5, currentRunRecordId);
-  renderLeaderboardHTML('fullRankList', 20, currentRunRecordId);
+
+  // 云端同步更新
+  if (isSupabaseReady() && currentRunRecordId) {
+    try {
+      const { error } = await supabaseClient
+        .from('leaderboard')
+        .update({ name: newName, location: loc })
+        .eq('id', currentRunRecordId);
+      if (error) console.warn('⚠️ 云端修改呼号失败:', error.message);
+    } catch(e) {}
+  } else if (!currentRunRecordId) {
+    await recordGameResult(score, wave);
+  }
+
+  await renderLeaderboardHTML('rankList', 5, currentRunRecordId);
+  await renderLeaderboardHTML('fullRankList', 20, currentRunRecordId);
   spawnPopup("🎖️ 功勋已同步至全球排行榜！", W / 2, H * 0.45, '#facc15', 1.25);
 }
 
-function updateRecordNameFromGameOver() {
-  updateRecordName(playerNameInput.value);
+async function updateRecordNameFromGameOver() {
+  await updateRecordName(playerNameInput.value);
 }
 
-function updateRecordNameFromMilestone() {
-  updateRecordName(milestoneNameInput.value);
+async function updateRecordNameFromMilestone() {
+  await updateRecordName(milestoneNameInput.value);
 }
 
-function openLeaderboardModal(e) {
+async function openLeaderboardModal(e) {
   if (e) e.stopPropagation();
-  renderLeaderboardHTML('fullRankList', 20, currentRunRecordId);
-  if (currentLocDisplay) currentLocDisplay.innerText = `📍 本地战区: ${detectedLocation || '定位中...'}`;
+  if (currentLocDisplay) currentLocDisplay.innerText = `📍 归属地: ${detectedLocation || '定位中...'}`;
   leaderboardOverlay.classList.remove('hidden');
+  await renderLeaderboardHTML('fullRankList', 20, currentRunRecordId);
 }
 
 function closeLeaderboardModal(e) {
@@ -1547,7 +1626,7 @@ function closeLeaderboardModal(e) {
 // ==========================================
 // 100关里程碑与通关庆典控制逻辑
 // ==========================================
-function triggerMilestoneOverlay(reachedWave) {
+async function triggerMilestoneOverlay(reachedWave) {
   isPaused = true;
   playSound('fanfare');
   spawnCelebratoryConfetti(80);
@@ -1556,8 +1635,8 @@ function triggerMilestoneOverlay(reachedWave) {
   const savedName = localStorage.getItem(LAST_NAME_KEY) || '指挥官';
   milestoneNameInput.value = savedName;
 
-  // 立即保存当前战绩
-  recordGameResult(score, reachedWave);
+  // 立即保存当前阶段战绩
+  await recordGameResult(score, reachedWave);
 
   milestoneOverlay.classList.remove('hidden');
 }
@@ -1595,14 +1674,14 @@ function continueChallengeFromMilestone() {
   requestAnimationFrame(gameLoop);
 }
 
-function quitFromMilestone() {
+async function quitFromMilestone() {
   milestoneOverlay.classList.add('hidden');
   celebratoryConfetti = [];
   isPlaying = false;
   isPaused = false;
   document.getElementById('finalStats').innerText = `荣誉通关第 ${wave} 波 | 终局得分: ${score.toLocaleString()}`;
   playerNameInput.value = localStorage.getItem(LAST_NAME_KEY) || '指挥官';
-  recordGameResult(score, wave);
+  await recordGameResult(score, wave);
   gameOverOverlay.classList.remove('hidden');
 }
 
@@ -1705,7 +1784,7 @@ function startGame() {
   requestAnimationFrame(gameLoop);
 }
 
-function gameOver() {
+async function gameOver() {
   isPlaying = false;
   isPaused = false;
   celebratoryConfetti = [];
@@ -1718,7 +1797,7 @@ function gameOver() {
   const savedName = localStorage.getItem(LAST_NAME_KEY) || '指挥官';
   playerNameInput.value = savedName;
 
-  recordGameResult(score, wave);
+  await recordGameResult(score, wave);
   gameOverOverlay.classList.remove('hidden');
 }
 
@@ -3005,7 +3084,7 @@ function drawDefenseTurret(posX, posY, isLeader = false) {
 
   const bulletTheme = getBulletTheme(bulletDamage);
 
-  // 瞄准辅助激光 (如果是主炮)
+  // 瞄准辅助激光
   if (isLeader) {
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
     ctx.lineWidth = 1;
@@ -3215,7 +3294,7 @@ function draw() {
     }
   }
 
-  // 2. 中央大主道
+  // 2. 中央大主道 (中央大桥道路 0.30 ~ 0.70)
   const pBL = project(0.30, 0);
   const pBR = project(0.70, 0);
   const pTL = project(0.30, 1);
@@ -3679,7 +3758,6 @@ function gameLoop(time) {
   if (!isPlaying) return;
 
   if (isPaused) {
-    // 暂停或弹窗期间仅渲染可能存在的彩带礼花，暂停敌机与主逻辑推进
     if (celebratoryConfetti.length > 0) {
       for (let cf of celebratoryConfetti) {
         cf.x += cf.vx * 0.5;
@@ -3705,7 +3783,7 @@ function gameLoop(time) {
   requestAnimationFrame(gameLoop);
 }
 
-// 页面加载完成后启动异步地理感知与上次呼号初始化
+// 页面加载完成后启动异步地理感知与上次呼号初始化，并预热拉取全球榜单
 window.addEventListener('DOMContentLoaded', () => {
   const savedName = localStorage.getItem(LAST_NAME_KEY);
   if (savedName) {
