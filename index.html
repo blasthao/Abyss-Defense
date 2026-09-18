@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>深渊防线：全境死守 - 炮阵狂潮版</title>
+<title>深渊防线：全境死守 - 炮阵狂潮版 · 性能强化</title>
 <!-- 引入 Supabase 官方浏览器 SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -507,7 +507,8 @@
     <p>
       • <b>双联重装炮台编组</b>：双联机炮正面火力压制，拾取战备增设联装机炮，构筑密集弹幕防线！<br><br>
       • <b>阶段百关大决战</b>：每坚守 <b>100 波</b> 触发通关大捷与全屏庆典，可荣誉结算或无限继续挑战！<br><br>
-      • <b>全球统一功勋榜</b>：直连 Supabase 云端数据库，自动感知 IP 归属地，汇聚全球前 20 传奇战绩！
+      • <b>全球统一功勋榜</b>：直连 Supabase 云端数据库，自动感知 IP 归属地，汇聚全球前 20 传奇战绩！<br><br>
+      • <b>高性能战场引擎</b>：远景剪影 LOD、粒子熔断回收、四向碰撞剪枝，让后期尸潮依旧流畅；连击达到里程碑还会解锁额外奖章！
     </p>
     <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
       <button class="btn" onclick="startGame()">部署重型炮阵</button>
@@ -1021,6 +1022,49 @@ let shockwaves = [];
 let popups = [];
 let casings = [];
 
+// ==========================================
+// 性能防线：动态容量与自适应特效预算
+// ==========================================
+// 高密度交火时优先保证主循环、碰撞与核心战斗手感。
+// 达到容量阈值后，自动减少新粒子/跳字/弹壳生成，而不是继续堆积对象。
+const PERF_LIMITS = {
+  maxParticles: 420,
+  maxPopups: 72,
+  maxCasings: 36,
+  maxShockwaves: 36,
+  maxConfetti: 110
+};
+
+function getParticleBudgetCount(baseCount, minCount = 1) {
+  if (baseCount <= 0 || particles.length >= PERF_LIMITS.maxParticles) return 0;
+
+  const ratio = particles.length / PERF_LIMITS.maxParticles;
+  let factor = 1.0;
+
+  if (ratio > 0.86) factor = 0.28;
+  else if (ratio > 0.72) factor = 0.45;
+  else if (ratio > 0.56) factor = 0.65;
+  else if (ratio > 0.40) factor = 0.82;
+
+  const remaining = PERF_LIMITS.maxParticles - particles.length;
+  return Math.max(
+    0,
+    Math.min(
+      remaining,
+      Math.max(minCount, Math.ceil(baseCount * factor))
+    )
+  );
+}
+
+// 连击奖章：不改变原有连击倍率，只增加少量即时反馈与奖励。
+const COMBO_REWARDS = [
+  { threshold: 50, reward: 2500, label: '✨ 50连击奖章 +2,500!' },
+  { threshold: 100, reward: 6000, label: '⚡ 100连击奖章 +6,000!' },
+  { threshold: 250, reward: 12000, label: '💥 250连击奖章 +12,000!' },
+  { threshold: 500, reward: 25000, label: '🔥 500连击奖章 +25,000!' }
+];
+const comboRewardClaimed = new Set();
+
 // 天气环境粒子
 let ambientParticles = [];
 let lightningAlpha = 0;
@@ -1221,6 +1265,9 @@ function updateSkillsUI() {
 }
 
 function spawnShockwave(x, y, maxR, color = '#38bdf8', lw = 3) {
+  if (shockwaves.length >= PERF_LIMITS.maxShockwaves) {
+    shockwaves.shift();
+  }
   shockwaves.push({ x, y, r: 4, maxR, color, lw, alpha: 1.0 });
 }
 
@@ -1643,7 +1690,8 @@ async function triggerMilestoneOverlay(reachedWave) {
 
 function spawnCelebratoryConfetti(count = 60) {
   const colors = ['#facc15', '#38bdf8', '#ef4444', '#4ade80', '#c084fc', '#fb923c', '#ffffff'];
-  for (let i = 0; i < count; i++) {
+  const safeCount = Math.min(count, PERF_LIMITS.maxConfetti - celebratoryConfetti.length);
+  for (let i = 0; i < Math.max(0, safeCount); i++) {
     celebratoryConfetti.push({
       x: Math.random() * W,
       y: -20 - Math.random() * 80,
@@ -1715,6 +1763,7 @@ function startGame() {
   comboKills = 0;
   comboTimer = 0;
   frenzyTimer = 0;
+  comboRewardClaimed.clear();
   updateComboUI();
 
   virusDebuffTimer = 0;
@@ -1802,11 +1851,17 @@ async function gameOver() {
 }
 
 function spawnPopup(text, x, y, color = '#38bdf8', scale = 1.0) {
+  if (popups.length >= PERF_LIMITS.maxPopups) {
+    popups.shift();
+  }
   popups.push({ text, x, y, vy: -1.0, alpha: 1, color, scale });
 }
 
 function createSparks(x, y, count = 8, color = '#22c55e') {
-  for (let i = 0; i < count; i++) {
+  const safeCount = getParticleBudgetCount(count, 1);
+  for (let i = 0; i < safeCount; i++) {
+    if (particles.length >= PERF_LIMITS.maxParticles) break;
+
     particles.push({
       x, y,
       vx: (Math.random() - 0.5) * 5,
@@ -1819,7 +1874,11 @@ function createSparks(x, y, count = 8, color = '#22c55e') {
 }
 
 function createGoreParticles(x, y, count = 12, type = 'flesh') {
-  for (let i = 0; i < count; i++) {
+  const safeCount = getParticleBudgetCount(count, count >= 10 ? 2 : 1);
+
+  for (let i = 0; i < safeCount; i++) {
+    if (particles.length >= PERF_LIMITS.maxParticles) break;
+
     const angle = Math.random() * Math.PI * 2;
     const speed = 1.5 + Math.random() * 5.5;
     let color = '#ef4444';
@@ -1941,6 +2000,8 @@ function spawnHordeRow(lane, startZ = 1.05, count = 12) {
 }
 
 // 暴君 BOSS 降临
+// 严格每 10 秒一次：固定 1 枚病毒孢子，不受 Boss 阶数/狂暴/其他加速机制影响。
+const BOSS_SPORE_INTERVAL_MS = 10000;
 let bossCount = 0;
 function spawnBoss(lane) {
   bossCount++;
@@ -1966,7 +2027,7 @@ function spawnBoss(lane) {
     speed: Math.min(0.016, 0.011 + bossCount * 0.0008),
     walkCycle: 0,
     frozenTimer: 0,
-    lastVirusLaunch: Date.now() - 5000,
+    lastVirusLaunch: Date.now(),
     hitFlash: 0,
     bossPressure: 0,
     lastHitPressure: 0,
@@ -2168,27 +2229,22 @@ function update(dt) {
       }
 
       if (en.z <= 0.95 && en.weakPointTimer <= 0) {
-        const hpRatio = en.hp / en.maxHp;
-        let virusInterval = 15000;
-        if (bossCount === 2) virusInterval = 12000;
-        else if (bossCount >= 3) virusInterval = hpRatio < 0.4 ? 8000 : 10000;
-
-        if (now - en.lastVirusLaunch >= virusInterval) {
+        // 严格固定 10,000 ms，永远只投掷 1 枚；不再按 Boss 阶数缩短，也不受狂暴影响。
+        if (now - en.lastVirusLaunch >= BOSS_SPORE_INTERVAL_MS) {
           en.lastVirusLaunch = now;
-          const sporeCount = bossCount >= 4 ? 2 : 1;
-          for (let sc = 0; sc < sporeCount; sc++) {
-            zombieBombs.push({
-              xRatio: en.xRatio + (sc === 0 ? -0.04 : 0.04) * (sporeCount - 1),
-              z: en.z - 0.05,
-              speed: 0.042,
-              hp: 20 + wave * 4,
-              maxHp: 20 + wave * 4,
-              rot: 0,
-              pulse: 0
-            });
-          }
+
+          zombieBombs.push({
+            xRatio: en.xRatio,
+            z: en.z - 0.05,
+            speed: 0.042,
+            hp: 20 + wave * 4,
+            maxHp: 20 + wave * 4,
+            rot: 0,
+            pulse: 0
+          });
+
           playSound('virus_launch');
-          spawnPopup(sporeCount > 1 ? "☣️ 暴君双发变异病毒巨孢！" : "☣️ 暴君抛掷变异病毒巨孢！", W * 0.5, H * 0.38, '#a855f7');
+          spawnPopup("☣️ 暴君投掷变异病毒巨孢！", W * 0.5, H * 0.38, '#a855f7');
         }
       }
     }
@@ -2259,10 +2315,10 @@ function update(dt) {
 
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
-      if (Math.abs(e.z - mine.z) < 0.035 && Math.abs(e.xRatio - mine.xRatio) < 0.08) {
-        detonated = true;
-        break;
-      }
+      if (e.z < mine.z - 0.035 || e.z > mine.z + 0.035) continue;
+      if (e.xRatio < mine.xRatio - 0.08 || e.xRatio > mine.xRatio + 0.08) continue;
+      detonated = true;
+      break;
     }
 
     if (detonated) {
@@ -2280,14 +2336,16 @@ function update(dt) {
 
       for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
-        if (Math.abs(e.z - mine.z) < blastRadiusZ && Math.abs(e.xRatio - mine.xRatio) < blastRadiusX) {
-          e.hp -= mine.damage;
-          const pushBack = e.isBoss ? 0.008 : (e.zType === 'shield' ? 0.03 : 0.06);
-          e.z = Math.min(1.02, e.z + pushBack);
-          e.hitFlash = 0.15;
-          if (e.hp <= 0) {
-            handleZombieKill(e, j);
-          }
+
+        if (e.z < mine.z - blastRadiusZ || e.z > mine.z + blastRadiusZ) continue;
+        if (e.xRatio < mine.xRatio - blastRadiusX || e.xRatio > mine.xRatio + blastRadiusX) continue;
+
+        e.hp -= mine.damage;
+        const pushBack = e.isBoss ? 0.008 : (e.zType === 'shield' ? 0.03 : 0.06);
+        e.z = Math.min(1.02, e.z + pushBack);
+        e.hitFlash = 0.15;
+        if (e.hp <= 0) {
+          handleZombieKill(e, j);
         }
       }
 
@@ -2333,12 +2391,14 @@ function update(dt) {
 
       for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
-        if (Math.abs(e.z - m.targetZ) < 0.055 && Math.abs(e.xRatio - m.targetXRatio) < 0.065) {
-          e.hp -= m.damage;
-          e.hitFlash = 0.15;
-          if (e.hp <= 0) {
-            handleZombieKill(e, j);
-          }
+
+        if (e.z < m.targetZ - 0.055 || e.z > m.targetZ + 0.055) continue;
+        if (e.xRatio < m.targetXRatio - 0.065 || e.xRatio > m.targetXRatio + 0.065) continue;
+
+        e.hp -= m.damage;
+        e.hitFlash = 0.15;
+        if (e.hp <= 0) {
+          handleZombieKill(e, j);
         }
       }
       mortars.splice(i, 1);
@@ -2429,15 +2489,17 @@ function update(dt) {
       });
 
       const pSoldier = project(sX, 0.04);
-      casings.push({
-        x: pSoldier.x + 6,
-        y: pSoldier.y - 28,
-        vx: 1.8 + Math.random() * 2.8,
-        vy: -2.8 - Math.random() * 2.2,
-        rot: Math.random() * Math.PI,
-        vRot: 0.25 + Math.random() * 0.35,
-        alpha: 1
-      });
+      if (casings.length < PERF_LIMITS.maxCasings) {
+        casings.push({
+          x: pSoldier.x + 6,
+          y: pSoldier.y - 28,
+          vx: 1.8 + Math.random() * 2.8,
+          vy: -2.8 - Math.random() * 2.2,
+          rot: Math.random() * Math.PI,
+          vRot: 0.25 + Math.random() * 0.35,
+          alpha: 1
+        });
+      }
     }
 
     if (bulletStreamCount > 5) {
@@ -2477,35 +2539,37 @@ function update(dt) {
     b.z += b.speed * dt;
     let hitSomething = false;
 
-    // 拦截病毒
+    // 拦截病毒：四向剪枝（z 上下界 + x 左右界）后才做真正命中处理。
     for (let k = zombieBombs.length - 1; k >= 0; k--) {
       const zb = zombieBombs[k];
-      if (Math.abs(b.z - zb.z) < 0.055 && Math.abs(b.xRatio - zb.xRatio) < 0.08) {
-        zb.hp -= b.damage;
-        playSound('hit', { pitch: 40 });
-        hitSomething = true;
-        const prj = project(zb.xRatio, zb.z);
-        createGoreParticles(prj.x, prj.y, 4, 'flesh');
 
-        if (zb.hp <= 0) {
-          playSound('mine_boom');
-          playSound('freeze');
-          screenShake = 2.5;
-          const blastZ = Math.min(0.92, zb.z + 0.12);
-          const prjBlast = project(zb.xRatio, blastZ);
-          spawnShockwave(prjBlast.x, prjBlast.y, 120, '#38bdf8', 4);
-          createGoreParticles(prjBlast.x, prjBlast.y, 30, 'flesh');
-          spawnPopup("❄️ 病毒反噬！局部冰冻 3s!", prjBlast.x, prjBlast.y - 20, '#38bdf8', 1.2);
+      if (b.z < zb.z - 0.055 || b.z > zb.z + 0.055) continue;
+      if (b.xRatio < zb.xRatio - 0.08 || b.xRatio > zb.xRatio + 0.08) continue;
 
-          for (let en of enemies) {
-            if (Math.abs(en.xRatio - zb.xRatio) < 0.18 && Math.abs(en.z - blastZ) < 0.14) {
-              en.frozenTimer = Math.max(en.frozenTimer || 0, 3.0);
-            }
-          }
-          zombieBombs.splice(k, 1);
+      zb.hp -= b.damage;
+      playSound('hit', { pitch: 40 });
+      hitSomething = true;
+      const prj = project(zb.xRatio, zb.z);
+      createGoreParticles(prj.x, prj.y, 4, 'flesh');
+
+      if (zb.hp <= 0) {
+        playSound('mine_boom');
+        playSound('freeze');
+        screenShake = 2.5;
+        const blastZ = Math.min(0.92, zb.z + 0.12);
+        const prjBlast = project(zb.xRatio, blastZ);
+        spawnShockwave(prjBlast.x, prjBlast.y, 120, '#38bdf8', 4);
+        createGoreParticles(prjBlast.x, prjBlast.y, 30, 'flesh');
+        spawnPopup("❄️ 病毒反噬！局部冰冻 3s!", prjBlast.x, prjBlast.y - 20, '#38bdf8', 1.2);
+
+        for (let en of enemies) {
+          if (en.z < blastZ - 0.14 || en.z > blastZ + 0.14) continue;
+          if (en.xRatio < zb.xRatio - 0.18 || en.xRatio > zb.xRatio + 0.18) continue;
+          en.frozenTimer = Math.max(en.frozenTimer || 0, 3.0);
         }
-        break;
+        zombieBombs.splice(k, 1);
       }
+      break;
     }
 
     // 悬浮战备宝箱充能判定
@@ -2530,7 +2594,12 @@ function update(dt) {
       for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
         const hitRadius = e.isBoss ? 0.16 : (e.zType === 'shield' ? 0.065 : 0.046);
-        if (Math.abs(b.z - e.z) < 0.045 && Math.abs(b.xRatio - e.xRatio) < hitRadius) {
+
+        // 四向剪枝：先判断纵深上下界，再判断横向左右界，远端敌人直接跳过。
+        if (b.z < e.z - 0.045 || b.z > e.z + 0.045) continue;
+        if (b.xRatio < e.xRatio - hitRadius || b.xRatio > e.xRatio + hitRadius) continue;
+
+        {
           let multiplier = 1.0;
           let isCrit = false;
 
@@ -2616,12 +2685,14 @@ function update(dt) {
             const prjB = project(e.xRatio, e.z);
             spawnShockwave(prjB.x, prjB.y, 48, '#facc15', 2);
             for (let other of enemies) {
-              if (other !== e && Math.abs(other.xRatio - e.xRatio) < 0.08 && Math.abs(other.z - e.z) < 0.05) {
-                other.hp -= Math.floor(finalDamage * 0.5);
-                other.hitFlash = 0.1;
-                if (other.hp <= 0 && !victims.includes(other)) {
-                  victims.push(other);
-                }
+              if (other === e) continue;
+              if (other.z < e.z - 0.05 || other.z > e.z + 0.05) continue;
+              if (other.xRatio < e.xRatio - 0.08 || other.xRatio > e.xRatio + 0.08) continue;
+
+              other.hp -= Math.floor(finalDamage * 0.5);
+              other.hitFlash = 0.1;
+              if (other.hp <= 0 && !victims.includes(other)) {
+                victims.push(other);
               }
             }
           }
@@ -2869,6 +2940,24 @@ function handleZombieKill(e, j) {
   if (!e.isBoss && frenzyTimer <= 0 && !isAirstrikeClearing) {
     comboKills++;
     comboTimer = COMBO_TIMEOUT;
+
+    // 连击奖章：达到节点只奖励一次，避免反复衰减/再连击造成无限刷奖。
+    for (const medal of COMBO_REWARDS) {
+      if (comboKills >= medal.threshold && !comboRewardClaimed.has(medal.threshold)) {
+        comboRewardClaimed.add(medal.threshold);
+        addScore(medal.reward);
+        playSound('mission_done');
+        screenShake = Math.max(screenShake, 1.2);
+        spawnPopup(
+          medal.label,
+          W / 2,
+          H * (0.47 - Math.min(0.08, medal.threshold / 10000)),
+          '#facc15',
+          medal.threshold >= 250 ? 1.15 : 1.0
+        );
+      }
+    }
+
     if (comboKills >= 1000) {
       frenzyTimer = 7.0;
       playSound('frenzy');
@@ -2924,7 +3013,101 @@ function triggerUpgrade(pod) {
   }
 }
 
+// ==========================================
+// LOD：远景僵尸低功耗剪影
+// z > 0.70 时跳过手脚骨骼、面部细节、复杂路径与局部装甲绘制。
+// 保留颜色、体型、冻结状态、Boss 血条/压力条等关键信息。
+function drawZombieSilhouette(e, prj) {
+  const scale = prj.scale;
+  const isFrozen = (freezeTimer > 0) || (e.frozenTimer > 0);
+  const flash = e.hitFlash > 0;
+  const s = scale * (e.isBoss ? 2.8 : (e.zType === 'shield' ? 1.35 : (e.zType === 'runner' ? 0.95 : 1.1)));
+
+  ctx.save();
+  ctx.translate(prj.x, prj.y);
+
+  // 地面阴影
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.beginPath();
+  ctx.ellipse(0, 3 * s, 9 * s, 3.5 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 一个轻量的“火柴人剪影”主体
+  const bodyColor = flash
+    ? '#ffffff'
+    : isFrozen
+      ? '#0369a1'
+      : e.isBoss
+        ? '#450a0a'
+        : e.zType === 'runner'
+          ? '#3f3f46'
+          : e.zType === 'shield'
+            ? '#1e293b'
+            : '#334155';
+
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = Math.max(2, 3.2 * s);
+  ctx.lineCap = 'round';
+
+  // 身体 + 双臂 + 双腿合并成一次 Stroke，进一步降低 Canvas 状态/路径调用。
+  ctx.beginPath();
+  ctx.moveTo(0, -27 * s);
+  ctx.lineTo(0, -8 * s);
+
+  ctx.moveTo(-1 * s, -22 * s);
+  ctx.lineTo(-7 * s, -11 * s);
+  ctx.moveTo(1 * s, -22 * s);
+  ctx.lineTo(7 * s, -11 * s);
+
+  ctx.moveTo(0, -8 * s);
+  ctx.lineTo(-5 * s, 1 * s);
+  ctx.moveTo(0, -8 * s);
+  ctx.lineTo(5 * s, 1 * s);
+  ctx.stroke();
+
+  // 头部：一次圆形绘制
+  ctx.fillStyle = flash ? '#ffffff' : (isFrozen ? '#7dd3fc' : (e.isBoss ? '#7f1d1d' : '#64748b'));
+  ctx.beginPath();
+  ctx.arc(0, -33 * s, 5.2 * s, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (e.zType === 'shield' && !e.shieldBroken) {
+    ctx.fillStyle = flash ? '#ffffff' : (isFrozen ? '#bae6fd' : '#1e293b');
+    ctx.fillRect(-10 * s, -27 * s, 20 * s, 19 * s);
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = Math.max(1, 1.1 * s);
+    ctx.strokeRect(-10 * s, -27 * s, 20 * s, 19 * s);
+  }
+
+  // 远景 Boss 仍保留关键战斗条，但去掉复杂文字/渐变。
+  if (e.isBoss) {
+    const headBarW = 82 * scale;
+    const headBarH = 5 * scale;
+    const headBarY = -49 * s;
+    const hpRatio = Math.max(0, e.hp / e.maxHp);
+    const pressRatio = e.weakPointTimer > 0
+      ? (e.weakPointTimer / 2.5)
+      : Math.min(1.0, e.bossPressure / 100);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.78)';
+    ctx.fillRect(-headBarW / 2, headBarY, headBarW, headBarH);
+
+    ctx.fillStyle = e.weakPointTimer > 0 ? '#facc15' : '#ef4444';
+    ctx.fillRect(-headBarW / 2, headBarY, headBarW * hpRatio, headBarH);
+
+    ctx.fillStyle = e.weakPointTimer > 0 ? '#facc15' : '#38bdf8';
+    ctx.fillRect(-headBarW / 2, headBarY + headBarH + 2, headBarW * pressRatio, Math.max(1.5, 2 * scale));
+  }
+
+  ctx.restore();
+}
+
 function drawHumanoidZombie(e, prj) {
+  // 远景 LOD：将最昂贵的细节绘制直接替换为轻量剪影。
+  if (e.z > 0.70) {
+    drawZombieSilhouette(e, prj);
+    return;
+  }
   const scale = prj.scale;
   const isFrozen = (freezeTimer > 0) || (e.frozenTimer > 0);
   const flash = e.hitFlash > 0;
@@ -3674,22 +3857,24 @@ function draw() {
     }
   }
 
-  // 15. 粒子渲染
+  // 15. 粒子渲染：无旋转粒子省略 save/restore，降低 Canvas 状态栈压力。
   for (let p of particles) {
-    ctx.save();
     ctx.fillStyle = p.color;
     ctx.globalAlpha = Math.max(0, p.alpha);
+
     if (p.rot !== undefined) {
+      ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
       ctx.fillRect(-p.radius, -p.radius, p.radius * 2, p.radius * 2);
+      ctx.restore();
     } else {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.restore();
   }
+  ctx.globalAlpha = 1.0;
 
   // 16. 庆祝彩带礼花渲染 (通关大捷)
   for (let cf of celebratoryConfetti) {
